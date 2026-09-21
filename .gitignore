@@ -1,0 +1,22 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+
+# Terraform plans
+*.tfplan
+
+# Lambda deployment packages
+*.zip
+
+# Python
+__pycache__/
+*.pyc
+
+# Environment files
+.env
+
+# OS/editor files
+.DS_Store
+Thumbs.db
