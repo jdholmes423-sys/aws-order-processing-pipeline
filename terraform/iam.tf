@@ -61,3 +61,67 @@ resource "aws_iam_role_policy_attachment" "intake_lambda_policy_attachment" {
     role = aws_iam_role.intake_lambda_role.name
     policy_arn = aws_iam_policy.intake_lambda_policy.arn
 }
+
+
+# Create the worker lambda's IAM role
+resource "aws_iam_role" "worker_lambda_role" {
+    name = "worker-lambda-role"
+
+    # Trust policy: allow Lambda to assume this role.
+    assume_role_policy = jsonencode({
+        Version = "2012-10-17"
+        Statement = [
+            {
+                Effect = "Allow"
+                Principal = {
+                    Service = "lambda.amazonaws.com"
+                }
+                
+                Action = "sts:AssumeRole"
+            }
+        ]
+    })
+}
+
+# Create the worker lambda's IAM policy
+resource "aws_iam_policy" "worker_lambda_policy" {
+  name        = "worker-lambda-policy"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ]
+        Effect   = "Allow"
+        Resource = "*"
+      },
+
+      {
+        Action = [
+            "sqs:ReceiveMessage",
+            "sqs:DeleteMessage",
+            "sqs:GetQueueAttributes"
+        ]
+        Effect = "Allow"
+        Resource = aws_sqs_queue.order_queue.arn
+      },
+      {
+        Action = [
+          "dynamodb:PutItem"
+        ]
+        Effect = "Allow"
+        Resource = aws_dynamodb_table.orders.arn
+      }
+    ]
+  })
+}
+
+# Connect the worker lambda's IAM Role and Policy
+resource "aws_iam_role_policy_attachment" "worker_lambda_policy_attachment" {
+    role = aws_iam_role.worker_lambda_role.name
+    policy_arn = aws_iam_policy.worker_lambda_policy.arn
+}
